@@ -1,9 +1,3 @@
-// FileManager.java
-// Načítanie otázok zo súboru a načítanie/uloženie výsledkov do súboru (CSV, oddeľovač ;).
-//
-// Formát otázok:   CHOICE;kategória;text;možnosť1,možnosť2,možnosť3;číslo správnej
-//                  TF;kategória;text;true/false
-// Formát výsledkov: meno;skóre;počet otázok
 package com.quizly;
 
 import java.io.IOException;
@@ -15,7 +9,6 @@ import java.util.List;
 
 public class FileManager {
 
-    // Načíta otázky zo súboru. Chybné riadky preskočí.
     public static List<Question> loadQuestions(String fileName) {
         List<Question> questions = new ArrayList<>();
         try {
@@ -41,7 +34,6 @@ public class FileManager {
         return questions;
     }
 
-    // Načíta výsledky zo súboru. Ak súbor ešte neexistuje, vráti prázdny zoznam.
     public static List<Result> loadResults(String fileName) {
         List<Result> results = new ArrayList<>();
         if (!Files.exists(Path.of(fileName))) {
@@ -63,7 +55,6 @@ public class FileManager {
         return results;
     }
 
-    // Uloží všetky výsledky do súboru (prepíše starý obsah)
     public static void saveResults(String fileName, List<Result> results) {
         List<String> lines = new ArrayList<>();
         for (Result r : results) {

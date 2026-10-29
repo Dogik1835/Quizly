@@ -1,5 +1,3 @@
-// Main.java
-// Spustenie aplikácie. Zobrazuje menu, spúšťa hru a vypisuje rebríček.
 package com.quizly;
 
 import java.util.List;
@@ -12,7 +10,6 @@ public class Main {
 
     private static Scanner scanner = new Scanner(System.in);
 
-    // Hlavná metóda - načíta dáta zo súborov a zobrazuje menu, kým hráč neskončí
     public static void main(String[] args) {
         Quiz quiz = new Quiz(FileManager.loadQuestions(QUESTIONS_FILE));
         Leaderboard leaderboard = new Leaderboard(FileManager.loadResults(RESULTS_FILE));
@@ -41,7 +38,6 @@ public class Main {
         }
     }
 
-    // Spustí jednu hru: výber kategórie, otázky, skóre a uloženie výsledku
     private static void play(Quiz quiz, Leaderboard leaderboard) {
         String name = readName();
 
@@ -52,6 +48,7 @@ public class Main {
         }
         int categoryChoice = readNumber("Kategória: ");
         String category = null;
+
         if (categoryChoice >= 1 && categoryChoice <= categories.size()) {
             category = categories.get(categoryChoice - 1);
         }
@@ -78,7 +75,6 @@ public class Main {
         FileManager.saveResults(RESULTS_FILE, leaderboard.getResults());
     }
 
-    // Vypíše 5 najlepších výsledkov
     private static void showTop(Leaderboard leaderboard) {
         List<Result> top = leaderboard.getTop(5);
         for (int i = 0; i < top.size(); i++) {
@@ -87,7 +83,6 @@ public class Main {
         }
     }
 
-    // Vypíše všetky výsledky zadaného hráča
     private static void showPlayerResults(Leaderboard leaderboard) {
         String name = readName();
         List<Result> results = leaderboard.getResultsOf(name);
@@ -99,7 +94,6 @@ public class Main {
         }
     }
 
-    // Načíta meno hráča - nesmie byť prázdne a nesmie obsahovať ";"
     private static String readName() {
         while (true) {
             System.out.print("Meno hráča: ");
@@ -111,7 +105,6 @@ public class Main {
         }
     }
 
-    // Načíta číslo od používateľa - ak nezadá číslo, opýta sa znova
     private static int readNumber(String prompt) {
         while (true) {
             System.out.print(prompt);
