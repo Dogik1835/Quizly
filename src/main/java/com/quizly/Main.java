@@ -1,117 +1,125 @@
-/*
- * Main.java
- * Vstupný bod aplikácie Quizly. Pripraví priečinok s dátami (pri prvom
- * spustení doň skopíruje predvolené otázky), načíta otázky a výsledky
- * zo súborov, vytvorí všetky objekty aplikácie a spustí konzolové menu.
- *
- * Použitie: java -jar quizly.jar [priečinok_s_dátami]   (predvolene "data")
- */
+// Main.java
+// Spustenie aplikácie. Zobrazuje menu, spúšťa hru a vypisuje rebríček.
 package com.quizly;
 
-import com.quizly.model.GameResult;
-import com.quizly.model.Question;
-import com.quizly.persistence.DataAccessException;
-import com.quizly.persistence.QuestionCsvRepository;
-import com.quizly.persistence.ResultCsvRepository;
-import com.quizly.service.Leaderboard;
-import com.quizly.service.QuestionBank;
-import com.quizly.ui.ConsoleApp;
-import com.quizly.ui.ConsoleInput;
-
-import java.io.BufferedReader;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Random;
+import java.util.Scanner;
 
 public class Main {
+    private static final String QUESTIONS_FILE = "questions.csv";
+    private static final String RESULTS_FILE = "results.csv";
+    private static final int QUESTIONS_PER_GAME = 5;
 
-    private static final String DEFAULT_QUESTIONS_RESOURCE = "/default_questions.csv";
+    private static Scanner scanner = new Scanner(System.in);
 
-    /**
-     * Spustí aplikáciu. Prvý argument (nepovinný) je cesta k priečinku s dátami.
-     */
+    // Hlavná metóda - načíta dáta zo súborov a zobrazuje menu, kým hráč neskončí
     public static void main(String[] args) {
-        PrintStream out = new PrintStream(new FileOutputStream(FileDescriptor.out), true, StandardCharsets.UTF_8);
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+        Quiz quiz = new Quiz(FileManager.loadQuestions(QUESTIONS_FILE));
+        Leaderboard leaderboard = new Leaderboard(FileManager.loadResults(RESULTS_FILE));
 
-        Path dataDir = Path.of(args.length > 0 ? args[0] : "data");
-        QuestionCsvRepository questionRepository = new QuestionCsvRepository(dataDir.resolve("questions.csv"));
-        ResultCsvRepository resultRepository = new ResultCsvRepository(dataDir.resolve("results.csv"));
+        while (true) {
+            System.out.println();
+            System.out.println("===== QUIZLY =====");
+            System.out.println("1) Hrať kvíz");
+            System.out.println("2) Rebríček (top 5)");
+            System.out.println("3) Moje výsledky");
+            System.out.println("0) Koniec");
+            int choice = readNumber("Voľba: ");
 
-        ensureDefaultQuestions(questionRepository.getFile(), out);
-        QuestionBank questionBank = loadQuestions(questionRepository, out);
-        Leaderboard leaderboard = loadResults(resultRepository, out);
-
-        ConsoleApp app = new ConsoleApp(questionBank, leaderboard, questionRepository, resultRepository,
-                new ConsoleInput(in, out), out, new Random());
-        app.run();
-    }
-
-    /**
-     * Ak súbor s otázkami ešte neexistuje (prvé spustenie), skopíruje doň
-     * predvolené otázky pribalené v aplikácii.
-     */
-    private static void ensureDefaultQuestions(Path questionsFile, PrintStream out) {
-        if (Files.exists(questionsFile)) {
-            return;
-        }
-        try (InputStream defaults = Main.class.getResourceAsStream(DEFAULT_QUESTIONS_RESOURCE)) {
-            if (defaults == null) {
-                out.println("Upozornenie: predvolené otázky sa nenašli, začína sa s prázdnou databázou.");
-                return;
+            if (choice == 1) {
+                play(quiz, leaderboard);
+            } else if (choice == 2) {
+                showTop(leaderboard);
+            } else if (choice == 3) {
+                showPlayerResults(leaderboard);
+            } else if (choice == 0) {
+                System.out.println("Dovidenia!");
+                break;
+            } else {
+                System.out.println("Neplatná voľba.");
             }
-            Path parent = questionsFile.toAbsolutePath().getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            Files.copy(defaults, questionsFile);
-        } catch (IOException e) {
-            out.println("Upozornenie: nepodarilo sa vytvoriť súbor s otázkami: " + e.getMessage());
         }
     }
 
-    /**
-     * Načíta otázky zo súboru do zásobníka. Chybné riadky a duplicitné ID
-     * preskočí s upozornením; pri chybe čítania začne s prázdnym zásobníkom.
-     */
-    private static QuestionBank loadQuestions(QuestionCsvRepository repository, PrintStream out) {
-        QuestionBank bank = new QuestionBank();
-        try {
-            List<Question> questions = repository.loadAll();
-            repository.getWarnings().forEach(w -> out.println("Upozornenie (otázky): " + w));
-            for (Question question : questions) {
-                try {
-                    bank.add(question);
-                } catch (IllegalArgumentException e) {
-                    out.println("Upozornenie (otázky): " + e.getMessage() + " – preskočené.");
-                }
-            }
-        } catch (DataAccessException e) {
-            out.println("Chyba: " + e.getMessage());
+    // Spustí jednu hru: výber kategórie, otázky, skóre a uloženie výsledku
+    private static void play(Quiz quiz, Leaderboard leaderboard) {
+        String name = readName();
+
+        List<String> categories = quiz.getCategories();
+        System.out.println("0) Všetky kategórie");
+        for (int i = 0; i < categories.size(); i++) {
+            System.out.println((i + 1) + ") " + categories.get(i));
         }
-        return bank;
+        int categoryChoice = readNumber("Kategória: ");
+        String category = null;
+        if (categoryChoice >= 1 && categoryChoice <= categories.size()) {
+            category = categories.get(categoryChoice - 1);
+        }
+
+        List<Question> questions = quiz.getRandomQuestions(category, QUESTIONS_PER_GAME);
+        int score = 0;
+        for (Question question : questions) {
+            System.out.println();
+            System.out.println(question.getText());
+            System.out.println(question.getHint());
+            System.out.print("Odpoveď: ");
+            String answer = scanner.nextLine();
+            if (question.isCorrect(answer)) {
+                System.out.println("Správne!");
+                score++;
+            } else {
+                System.out.println("Zle. Správna odpoveď: " + question.getCorrectAnswer());
+            }
+        }
+
+        System.out.println();
+        System.out.println("Tvoje skóre: " + score + "/" + questions.size());
+        leaderboard.addResult(new Result(name, score, questions.size()));
+        FileManager.saveResults(RESULTS_FILE, leaderboard.getResults());
     }
 
-    /**
-     * Načíta históriu výsledkov zo súboru do rebríčka. Pri chybe čítania
-     * začne s prázdnym rebríčkom.
-     */
-    private static Leaderboard loadResults(ResultCsvRepository repository, PrintStream out) {
-        try {
-            List<GameResult> results = repository.loadAll();
-            repository.getWarnings().forEach(w -> out.println("Upozornenie (výsledky): " + w));
-            return new Leaderboard(results);
-        } catch (DataAccessException e) {
-            out.println("Chyba: " + e.getMessage());
-            return new Leaderboard();
+    // Vypíše 5 najlepších výsledkov
+    private static void showTop(Leaderboard leaderboard) {
+        List<Result> top = leaderboard.getTop(5);
+        for (int i = 0; i < top.size(); i++) {
+            Result r = top.get(i);
+            System.out.println((i + 1) + ". " + r.getPlayerName() + " - " + r.getScore() + "/" + r.getTotal());
+        }
+    }
+
+    // Vypíše všetky výsledky zadaného hráča
+    private static void showPlayerResults(Leaderboard leaderboard) {
+        String name = readName();
+        List<Result> results = leaderboard.getResultsOf(name);
+        if (results.isEmpty()) {
+            System.out.println("Tento hráč ešte nehral.");
+        }
+        for (Result r : results) {
+            System.out.println(r.getScore() + "/" + r.getTotal());
+        }
+    }
+
+    // Načíta meno hráča - nesmie byť prázdne a nesmie obsahovať ";"
+    private static String readName() {
+        while (true) {
+            System.out.print("Meno hráča: ");
+            String name = scanner.nextLine().trim();
+            if (!name.isEmpty() && !name.contains(";")) {
+                return name;
+            }
+            System.out.println("Neplatné meno.");
+        }
+    }
+
+    // Načíta číslo od používateľa - ak nezadá číslo, opýta sa znova
+    private static int readNumber(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Zadaj číslo!");
+            }
         }
     }
 }

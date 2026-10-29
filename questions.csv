@@ -1,0 +1,22 @@
+CHOICE;Geografia;Aké je hlavné mesto Slovenska?;Košice,Bratislava,Žilina,Nitra;2
+CHOICE;Geografia;Ktorá rieka je najdlhšia na svete?;Níl,Dunaj,Volga,Rýn;1
+TF;Geografia;Česko hraničí s Rakúskom.;true
+CHOICE;Geografia;Aké je hlavné mesto Austrálie?;Sydney,Melbourne,Canberra,Perth;3
+TF;Geografia;Gerlachovský štít je najvyšší vrch Slovenska.;true
+CHOICE;História;V ktorom roku vznikla Slovenská republika?;1918,1989,1993,2004;3
+TF;História;Druhá svetová vojna skončila v roku 1945.;true
+TF;História;Berlínsky múr padol v roku 1991.;false
+CHOICE;História;Kto bol prvý prezident Československa?;Edvard Beneš,Tomáš G. Masaryk,Václav Havel,Ľudovít Štúr;2
+CHOICE;Veda;Aký je chemický vzorec vody?;CO2,H2O,O2,NaCl;2
+TF;Veda;Slnko je hviezda.;true
+CHOICE;Veda;Ktorá planéta je najbližšie k Slnku?;Venuša,Mars,Merkúr,Zem;3
+CHOICE;Veda;Koľko kostí má dospelý človek?;156,186,206,256;3
+TF;Veda;Diamant a grafit sú tvorené rovnakým prvkom.;true
+CHOICE;Informatika;Čo znamená skratka CPU?;Central Processing Unit,Computer Power Unit,Core Program Unit;1
+TF;Informatika;Java a JavaScript sú ten istý jazyk.;false
+CHOICE;Informatika;Koľko bitov má jeden bajt?;4,8,16,32;2
+CHOICE;Informatika;Ktorá kolekcia v Jave neumožňuje duplicity?;ArrayList,LinkedList,HashSet;3
+TF;Informatika;Git slúži na správu verzií kódu.;true
+CHOICE;Šport;Koľko hráčov má futbalový tím na ihrisku?;9,10,11,12;3
+TF;Šport;Hokejový zápas má tri tretiny.;true
+CHOICE;Šport;Koľko kruhov je na olympijskej vlajke?;3,4,5,6;3

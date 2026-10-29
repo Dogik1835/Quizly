@@ -35,5 +35,5 @@ target/
 .idea/
 *.iml
 
-### Dáta aplikácie (vytvárajú sa pri behu) ###
-data/
+### Výsledky hier (vytvárajú sa pri behu) ###
+results.csv
